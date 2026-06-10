@@ -1,21 +1,18 @@
 package com.estebanmm13.movies_service.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -24,19 +21,6 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("${jwt.expiration:86400000}")
-    private long EXPIRATION_TIME;
-
-    public String generateToken(UserDetails userDetails){
-        return generateToken(new HashMap<>(),userDetails);
-    }
-
-    public String generateToken(Map<String,Object> extraClaims, UserDetails userDetails){
-        return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 *24))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256).compact();
-    }
     public String getUserName(String token) {
         return getClaim(token, Claims::getSubject);
     }
@@ -47,7 +31,11 @@ public class JwtService {
     }
 
     private Claims getAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSignInKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private Key getSignInKey() {
@@ -55,11 +43,14 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-
-        final String username = getUserName(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-
+    // ✅ Método que necesita JwtFilter para validar el token sin UserDetailsService
+    public boolean isTokenValid(String token) {
+        try {
+            getAllClaims(token); // lanza excepción si está expirado o malformado
+            return !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
@@ -68,12 +59,6 @@ public class JwtService {
 
     private Date getExpiration(String token) {
         return getClaim(token, Claims::getExpiration);
-    }
-
-    public String generateTokenWithRole(UserDetails userDetails, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        return generateToken(claims, userDetails);
     }
 
     public String extractRole(String token) {
@@ -85,6 +70,6 @@ public class JwtService {
         if (role != null) {
             return List.of(new SimpleGrantedAuthority("ROLE_" + role));
         }
-        return List.of(); // Lista vacía si no hay rol
+        return List.of();
     }
 }

@@ -7,16 +7,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Component
-@Order(2)
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -28,21 +30,34 @@ public class JwtFilter extends OncePerRequestFilter {
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
 
-        log.debug("Validando token JWT para request: {}", request.getRequestURI());
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        jwt = authHeader.substring(7);
-        username = jwtService.getUserName(jwt);
+
+        String jwt = authHeader.substring(7);
+
+        if (!jwtService.isTokenValid(jwt)) {
+            log.warn("Token inválido o expirado para request: {}", request.getRequestURI());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String username = jwtService.getUserName(jwt);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            log.debug("Token valido para usuario: {}", username);
+            List<GrantedAuthority> authorities = jwtService.getAuthorities(jwt);
+            log.debug("Token válido para usuario: {}, roles: {}", username, authorities);
+
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    username, null, authorities
+            );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(request, response); // ✅ solo una vez
     }
 }

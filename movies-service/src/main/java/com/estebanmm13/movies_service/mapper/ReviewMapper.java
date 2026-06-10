@@ -5,7 +5,6 @@ import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
 import com.estebanmm13.movies_service.models.Movie;
 import com.estebanmm13.movies_service.models.Review;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Component
-@Order(1)
 public class CorrelationIdFilter extends OncePerRequestFilter {
 
     private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";

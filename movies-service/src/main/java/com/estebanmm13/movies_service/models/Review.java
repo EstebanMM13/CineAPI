@@ -5,9 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.catalina.User;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -23,15 +20,14 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @ManyToOne
+    @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
     private String comment;
 
     private LocalDateTime createdAt;
-
 }

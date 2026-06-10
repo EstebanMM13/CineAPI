@@ -5,16 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.catalina.User;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "votes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "movie_id"},
-                name = "uk_user_movie_vote")
+        @UniqueConstraint(columnNames = {"user_id", "movie_id"}, name = "uk_user_movie_vote")
 })
 @Data
 @NoArgsConstructor
@@ -27,10 +23,10 @@ public class Vote {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
-    @ManyToOne
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     private Double rating;
