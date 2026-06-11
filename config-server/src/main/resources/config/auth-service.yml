@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/auth_db
-    username: root
-    password: 1234
+    url: ${DB_AUTH_URL:jdbc:mysql://localhost:3306/auth_db}
+    username: ${DB_USER:root}
+    password: ${DB_PASS:1234}
   jpa:
     database: MYSQL
     hibernate:
@@ -11,7 +11,7 @@ spring:
     show-sql: false
 
 jwt:
-  secret: 2da08e8ee264a149413ce46abebbd566b4c8bbb019b37708ed9d77f8511ac7bf
+  secret: ${JWT_SECRET:2da08e8ee264a149413ce46abebbd566b4c8bbb019b37708ed9d77f8511ac7bf}
 
 springdoc:
   swagger-ui:
@@ -22,7 +22,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} - %logger{36} - [%X{correlationId}] - %msg%n"
   level:
     root: WARN
-    com.estebanmm13.movies_service: DEBUG
+    com.estebanmm13.auth_service: DEBUG
     org.hibernate: ERROR
     org.springframework: ERROR
     org.springframework.web: INFO
