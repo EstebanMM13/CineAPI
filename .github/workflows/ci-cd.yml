@@ -8,8 +8,8 @@ on:
 
 jobs:
 
-  # ==================== TEST ====================
-  test:
+  # ==================== BUILD ====================
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,21 +23,47 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Compile - auth-service
-        run: cd auth-service && mvn clean compile -q
+      - name: Build service-registry
+        run: cd service-registry && mvn clean package -DskipTests -q
 
-      - name: Compile - movies-service
-        run: cd movies-service && mvn clean compile -q
+      - name: Build config-server
+        run: cd config-server && mvn clean package -DskipTests -q
+
+      - name: Build auth-service
+        run: cd auth-service && mvn clean package -DskipTests -q
+
+      - name: Build movies-service
+        run: cd movies-service && mvn clean package -DskipTests -q
+
+      - name: Build api-gateway
+        run: cd api-gateway && mvn clean package -DskipTests -q
+
+      - name: Upload JARs
+        uses: actions/upload-artifact@v4
+        with:
+          name: jars
+          path: |
+            service-registry/target/*.jar
+            config-server/target/*.jar
+            auth-service/target/*.jar
+            movies-service/target/*.jar
+            api-gateway/target/*.jar
 
   # ==================== DOCKER ====================
   docker:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: .
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
