@@ -1,0 +1,125 @@
+services:
+
+  # ==================== BASES DE DATOS ====================
+
+  mysql-auth:
+    image: mysql:8.0
+    container_name: movies-mysql-auth
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: auth_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-auth-data:/var/lib/mysql
+      - ./docker/init/init-auth.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-movies:
+    image: mysql:8.0
+    container_name: movies-mysql-movies
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: movies_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-movies-data:/var/lib/mysql
+      - ./docker/init/init-movies.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== INFRAESTRUCTURA ====================
+
+  service-registry:
+    image: estebanmm13/service-registry:latest
+    container_name: movies-service-registry
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_HOSTNAME: service-registry
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  config-server:
+    image: estebanmm13/config-server:latest
+    container_name: movies-config-server
+    ports:
+      - "8088:8088"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8088/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MICROSERVICIOS ====================
+
+  auth-service:
+    image: estebanmm13/auth-service:latest
+    container_name: movies-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+      CONFIG_SERVER_URL: http://config-server:8088
+      DB_AUTH_URL: jdbc:mysql://mysql-auth:3306/auth_db?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: 1234
+      JWT_SECRET: 2da08e8ee264a149413ce46abebbd566b4c8bbb019b37708ed9d77f8511ac7bf
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+
+  movies-service:
+    image: estebanmm13/movies-service:latest
+    container_name: movies-movies-service
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+      CONFIG_SERVER_URL: http://config-server:8088
+      DB_MOVIES_URL: jdbc:mysql://mysql-movies:3306/movies_db?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: 1234
+      JWT_SECRET: 2da08e8ee264a149413ce46abebbd566b4c8bbb019b37708ed9d77f8511ac7bf
+    depends_on:
+      mysql-movies:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+
+  api-gateway:
+    image: estebanmm13/api-gateway:latest
+    container_name: movies-api-gateway
+    ports:
+      - "8060:8060"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+      CONFIG_SERVER_URL: http://config-server:8088
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+
+volumes:
+  mysql-auth-data:
+  mysql-movies-data:

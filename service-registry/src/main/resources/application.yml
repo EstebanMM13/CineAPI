@@ -1,15 +1,17 @@
+server:
+  port: 8761
+
 spring:
   application:
     name: service-registry
 
-server:
-  port: 8761
-
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOSTNAME:localhost}
   client:
     register-with-eureka: false
     fetch-registry: false
     serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+      defaultZone: http://${EUREKA_HOSTNAME:localhost}:8761/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0

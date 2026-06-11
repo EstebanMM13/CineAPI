@@ -43,7 +43,6 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // ✅ Método que necesita JwtFilter para validar el token sin UserDetailsService
     public boolean isTokenValid(String token) {
         try {
             getAllClaims(token); // lanza excepción si está expirado o malformado
