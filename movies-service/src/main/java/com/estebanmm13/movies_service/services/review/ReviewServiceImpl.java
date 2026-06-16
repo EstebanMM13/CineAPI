@@ -1,6 +1,7 @@
 package com.estebanmm13.movies_service.services.review;
 
 
+import com.estebanmm13.movies_service.clients.AuthServiceClient;
 import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
@@ -10,6 +11,8 @@ import com.estebanmm13.movies_service.models.Movie;
 import com.estebanmm13.movies_service.models.Review;
 import com.estebanmm13.movies_service.repositories.MovieRepository;
 import com.estebanmm13.movies_service.repositories.ReviewRepository;
+import feign.FeignException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,25 +23,46 @@ import java.util.stream.Collectors;
 import static com.estebanmm13.movies_service.error.notFound.ReviewNotFoundException.NOT_ACCES;
 
 
+@Slf4j
 @Service
 public class ReviewServiceImpl implements ReviewService {
+
+    private static final String UNKNOWN_USERNAME = "Usuario desconocido";
 
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final ReviewMapper reviewMapper;
+    private final AuthServiceClient authServiceClient;
 
     public ReviewServiceImpl(ReviewRepository reviewRepository,
                              MovieRepository movieRepository,
-                             ReviewMapper reviewMapper) {
+                             ReviewMapper reviewMapper,
+                             AuthServiceClient authServiceClient) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.reviewMapper = reviewMapper;
+        this.authServiceClient = authServiceClient;
+    }
+
+    private ReviewResponseDTO toResponseDTOWithUsername(Review review) {
+        ReviewResponseDTO dto = reviewMapper.toResponseDTO(review);
+        dto.setUsername(resolveUsername(review.getUserId()));
+        return dto;
+    }
+
+    private String resolveUsername(Long userId) {
+        try {
+            return authServiceClient.getUsernameById(userId);
+        } catch (FeignException ex) {
+            log.warn("No se pudo resolver el username del usuario {} en auth-service: {}", userId, ex.getMessage());
+            return UNKNOWN_USERNAME;
+        }
     }
 
     @Override
     public List<ReviewResponseDTO> findAllReviews() {
         return reviewRepository.findAll()
-                .stream().map(reviewMapper::toResponseDTO)
+                .stream().map(this::toResponseDTOWithUsername)
                 .collect(Collectors.toList());
     }
 
@@ -46,7 +70,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponseDTO findReviewById(Long id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ReviewNotFoundException(String.format(ReviewNotFoundException.NOT_FOUND_BY_ID, id)));
-        return reviewMapper.toResponseDTO(review);
+        return toResponseDTOWithUsername(review);
     }
 
     @Override
@@ -62,7 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review review = reviewMapper.toEntity(dto, userId, movie);
         Review saved = reviewRepository.save(review);
-        return reviewMapper.toResponseDTO(saved);
+        return toResponseDTOWithUsername(saved);
     }
 
     @Override
@@ -77,7 +101,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         review.setComment(dto.getComment());
         Review updated = reviewRepository.save(review);
-        return reviewMapper.toResponseDTO(updated);
+        return toResponseDTOWithUsername(updated);
     }
 
 
@@ -97,11 +121,11 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Page<ReviewResponseDTO> findReviewsByMovieId(Long movieId, Pageable pageable) {
-        return reviewRepository.findReviewsByMovieId(movieId, pageable).map(reviewMapper::toResponseDTO);
+        return reviewRepository.findReviewsByMovieId(movieId, pageable).map(this::toResponseDTOWithUsername);
     }
 
     @Override
     public Page<ReviewResponseDTO> findReviewsByUserId(Long userId, Pageable pageable) {
-        return reviewRepository.findReviewsByUserId(userId, pageable).map(reviewMapper::toResponseDTO);
+        return reviewRepository.findReviewsByUserId(userId, pageable).map(this::toResponseDTOWithUsername);
     }
 }

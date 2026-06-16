@@ -27,6 +27,9 @@ public class ReviewResponseDTO {
 
     private Long userId;
 
+    @Schema(description = "Username of the review author, resolved from auth-service", example = "johndoe")
+    private String username;
+
     @Schema(description = "Title of the reviewed movie", example = "Inception")
     private String movieTitle;
 }

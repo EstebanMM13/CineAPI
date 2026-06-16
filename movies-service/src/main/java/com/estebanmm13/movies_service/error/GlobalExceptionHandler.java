@@ -4,6 +4,7 @@ import com.estebanmm13.movies_service.error.notFound.GenreNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.ReviewNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.VoteNotFoundException;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegal(IllegalArgumentException ex) {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<Map<String, Object>> handleFeignException(FeignException ex) {
+        log.error("Error llamando a un microservicio externo: {}", ex.getMessage());
+        return buildError(HttpStatus.SERVICE_UNAVAILABLE, "Un servicio dependiente no está disponible");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

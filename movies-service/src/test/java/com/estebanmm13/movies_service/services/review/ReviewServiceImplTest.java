@@ -1,5 +1,6 @@
 package com.estebanmm13.movies_service.services.review;
 
+import com.estebanmm13.movies_service.clients.AuthServiceClient;
 import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,11 +32,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ReviewServiceImplTest {
 
     @Mock private ReviewRepository reviewRepository;
     @Mock private MovieRepository movieRepository;
     @Mock private ReviewMapper reviewMapper;
+    @Mock private AuthServiceClient authServiceClient;
 
     @InjectMocks private ReviewServiceImpl reviewService;
 

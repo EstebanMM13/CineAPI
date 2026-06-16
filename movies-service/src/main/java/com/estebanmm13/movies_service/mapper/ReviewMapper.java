@@ -19,6 +19,7 @@ public class ReviewMapper {
                 review.getComment(),
                 review.getCreatedAt(),
                 review.getUserId(),
+                null,
                 review.getMovie().getTitle()
         );
     }
