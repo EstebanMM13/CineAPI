@@ -6,6 +6,9 @@ import com.estebanmm13.auth_service.dtoModels.response.UserResponseDTO;
 import com.estebanmm13.auth_service.models.Role;
 import com.estebanmm13.auth_service.services.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +33,13 @@ public class AdminController {
     private final UserService userService;
 
     @GetMapping("/users")
-    @Operation(summary = "Obtener todos los usuarios con paginación (solo ADMIN)")
+    @Operation(summary = "Get all users", description = "Returns a paginated list of all users. Requires ADMIN role.")
+    @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Field to sort by", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction: asc or desc", example = "asc") @RequestParam(defaultValue = "asc") String direction) {
 
         log.info("Admin - Obteniendo usuarios - página: {}, tamaño: {}", page, size);
 
@@ -46,15 +50,25 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}")
-    @Operation(summary = "Obtener usuario por ID (solo ADMIN)")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+    @Operation(summary = "Get user by ID", description = "Requires ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<UserResponseDTO> getUserById(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
         log.info("Admin - Obteniendo usuario con ID: {}", id);
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
     @DeleteMapping("/users/{id}")
-    @Operation(summary = "Eliminar usuario (solo ADMIN)")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    @Operation(summary = "Delete user by ID", description = "Requires ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
         log.info("Admin - Eliminando usuario con ID: {}", id);
         userService.deleteUser(id);
         log.info("Usuario eliminado exitosamente: {}", id);
@@ -62,7 +76,8 @@ public class AdminController {
     }
 
     @GetMapping("/stats")
-    @Operation(summary = "Estadísticas del sistema (solo ADMIN)")
+    @Operation(summary = "Get system stats", description = "Returns total, admin and regular user counts. Requires ADMIN role.")
+    @ApiResponse(responseCode = "200", description = "Stats retrieved successfully")
     public ResponseEntity<SystemStats> getSystemStats() {
         log.info("Admin - Obteniendo estadísticas del sistema");
 

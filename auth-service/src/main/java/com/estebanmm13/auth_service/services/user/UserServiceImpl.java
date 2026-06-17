@@ -3,7 +3,6 @@ package com.estebanmm13.auth_service.services.user;
 
 import com.estebanmm13.auth_service.dtoModels.request.UserRequestDTO;
 import com.estebanmm13.auth_service.dtoModels.response.UserResponseDTO;
-import com.estebanmm13.auth_service.error.MovieNotFoundException;
 import com.estebanmm13.auth_service.error.UserNotFoundException;
 import com.estebanmm13.auth_service.mapper.UserMapper;
 import com.estebanmm13.auth_service.models.Role;
@@ -61,7 +60,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new MovieNotFoundException(String.format(NOT_FOUND_BY_ID, id));
+            throw new UserNotFoundException(String.format(NOT_FOUND_BY_ID, id));
         }
         userRepository.deleteById(id);
     }

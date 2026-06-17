@@ -1,6 +1,7 @@
 package com.estebanmm13.auth_service.error;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,6 +46,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegal(IllegalArgumentException ex) {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        return buildError(HttpStatus.CONFLICT, "Operation violates a data integrity constraint");
     }
 
     private ResponseEntity<Map<String, Object>> buildError(HttpStatus status, String message) {

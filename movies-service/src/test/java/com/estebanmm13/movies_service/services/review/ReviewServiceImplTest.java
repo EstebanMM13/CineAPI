@@ -3,8 +3,10 @@ package com.estebanmm13.movies_service.services.review;
 import com.estebanmm13.movies_service.clients.UsernameResolver;
 import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
+import com.estebanmm13.movies_service.error.notFound.DuplicateReviewException;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.ReviewNotFoundException;
+import com.estebanmm13.movies_service.error.notFound.UnauthorizedActionException;
 import com.estebanmm13.movies_service.mapper.ReviewMapper;
 import com.estebanmm13.movies_service.models.Movie;
 import com.estebanmm13.movies_service.models.Review;
@@ -131,13 +133,13 @@ class ReviewServiceImplTest {
     }
 
     @Test
-    void createReview_duplicateReview_throwsRuntimeException() {
+    void createReview_duplicateReview_throwsDuplicateReviewException() {
         Movie m = movie(1L);
         given(movieRepository.findById(1L)).willReturn(Optional.of(m));
         given(reviewRepository.existsByUserIdAndMovieId(10L, 1L)).willReturn(true);
 
         assertThatThrownBy(() -> reviewService.createReview(10L, 1L, reviewRequest("comment")))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(DuplicateReviewException.class)
                 .hasMessageContaining("already submitted");
 
         then(reviewRepository).should(never()).save(any());
@@ -163,14 +165,14 @@ class ReviewServiceImplTest {
     }
 
     @Test
-    void updateReview_notOwner_throwsReviewNotFoundException() {
+    void updateReview_notOwner_throwsUnauthorizedActionException() {
         Movie m = movie(1L);
         Review r = review(1L, 10L, m);
         given(reviewRepository.findById(1L)).willReturn(Optional.of(r));
 
         assertThatThrownBy(() -> reviewService.updateReview(1L, 99L, reviewRequest("hack")))
-                .isInstanceOf(ReviewNotFoundException.class)
-                .hasMessageContaining("cannot");
+                .isInstanceOf(UnauthorizedActionException.class)
+                .hasMessageContaining("not authorized");
 
         then(reviewRepository).should(never()).save(any());
     }
@@ -197,14 +199,14 @@ class ReviewServiceImplTest {
     }
 
     @Test
-    void deleteReview_notOwner_throwsReviewNotFoundException() {
+    void deleteReview_notOwner_throwsUnauthorizedActionException() {
         Movie m = movie(1L);
         Review r = review(1L, 10L, m);
         given(reviewRepository.findById(1L)).willReturn(Optional.of(r));
 
         assertThatThrownBy(() -> reviewService.deleteReview(1L, 99L))
-                .isInstanceOf(ReviewNotFoundException.class)
-                .hasMessageContaining("cannot");
+                .isInstanceOf(UnauthorizedActionException.class)
+                .hasMessageContaining("not authorized");
 
         then(reviewRepository).should(never()).deleteById(any());
     }

@@ -3,6 +3,7 @@ package com.estebanmm13.movies_service.services.movie;
 
 import com.estebanmm13.movies_service.dtoModels.request.MovieRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.MovieResponseDTO;
+import com.estebanmm13.movies_service.error.notFound.DuplicateVoteException;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
 import com.estebanmm13.movies_service.mapper.MovieMapper;
 import com.estebanmm13.movies_service.models.Genre;
@@ -100,12 +101,10 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponseDTO voteMovie(Long movieId, Long userId, Double rating) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException("Movie not found with id: " + movieId));
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-//
-//        if (voteRepository.existsByUserAndMovie(user, movie)) {
-//            throw new DuplicateVoteException("You already voted this movie.");
-//        }
+
+        if (voteRepository.existsByUserIdAndMovieId(userId, movieId)) {
+            throw new DuplicateVoteException(String.format(DuplicateVoteException.ALREADY_VOTED, userId, movieId));
+        }
 
         Vote vote = Vote.builder()
                 .movie(movie)

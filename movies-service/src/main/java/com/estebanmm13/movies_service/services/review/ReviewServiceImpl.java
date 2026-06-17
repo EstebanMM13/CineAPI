@@ -19,7 +19,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.estebanmm13.movies_service.error.notFound.ReviewNotFoundException.NOT_ACCES;
+import com.estebanmm13.movies_service.error.notFound.DuplicateReviewException;
+import com.estebanmm13.movies_service.error.notFound.UnauthorizedActionException;
 
 
 @Slf4j
@@ -68,7 +69,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new MovieNotFoundException(String.format(MovieNotFoundException.NOT_FOUND_BY_ID, movieId)));
 
         if (reviewRepository.existsByUserIdAndMovieId(userId, movieId)) {
-            throw new RuntimeException("User already submitted a review for this movie");
+            throw new DuplicateReviewException(String.format(DuplicateReviewException.ALREADY_REVIEWED, userId, movieId));
         }
 
         Review review = reviewMapper.toEntity(dto, userId, movie);
@@ -81,9 +82,8 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ReviewNotFoundException(String.format(ReviewNotFoundException.NOT_FOUND_BY_ID, id)));
 
-        // ✅ Ahora funciona porque review.getUserId() es un Long directamente
         if (!review.getUserId().equals(userId)) {
-            throw new ReviewNotFoundException(NOT_ACCES);
+            throw new UnauthorizedActionException(UnauthorizedActionException.NOT_YOUR_REVIEW);
         }
 
         review.setComment(dto.getComment());
@@ -98,9 +98,8 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException(String.format(ReviewNotFoundException.NOT_FOUND_BY_ID, reviewId)));
 
-        // ✅ Ahora funciona porque review.getUserId() es un Long directamente
         if (!review.getUserId().equals(userId)) {
-            throw new ReviewNotFoundException(NOT_ACCES);
+            throw new UnauthorizedActionException(UnauthorizedActionException.NOT_YOUR_REVIEW);
         }
 
         reviewRepository.deleteById(reviewId);

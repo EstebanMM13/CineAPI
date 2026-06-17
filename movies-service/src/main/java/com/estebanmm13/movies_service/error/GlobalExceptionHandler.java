@@ -1,10 +1,14 @@
 package com.estebanmm13.movies_service.error;
 
+import com.estebanmm13.movies_service.error.notFound.DuplicateReviewException;
+import com.estebanmm13.movies_service.error.notFound.DuplicateVoteException;
 import com.estebanmm13.movies_service.error.notFound.GenreNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
 import com.estebanmm13.movies_service.error.notFound.ReviewNotFoundException;
+import com.estebanmm13.movies_service.error.notFound.UnauthorizedActionException;
 import com.estebanmm13.movies_service.error.notFound.VoteNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +38,30 @@ public class GlobalExceptionHandler {
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         return buildError(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(DuplicateReviewException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateReview(DuplicateReviewException ex) {
+        log.warn("Duplicate review: {}", ex.getMessage());
+        return buildError(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateVoteException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateVote(DuplicateVoteException ex) {
+        log.warn("Duplicate vote: {}", ex.getMessage());
+        return buildError(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        return buildError(HttpStatus.CONFLICT, "Operation violates a data integrity constraint");
+    }
+
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedAction(UnauthorizedActionException ex) {
+        log.warn("Unauthorized action: {}", ex.getMessage());
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
