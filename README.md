@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🎬 Movies API
+# 🎬 CineAPI
 
 ### REST API built with Spring Cloud Microservices for movie management
 
-[![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.6-brightgreen?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
-[![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-2025.1.1-brightgreen?style=flat-square&logo=spring)](https://spring.io/projects/spring-cloud)
+[![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.3-brightgreen?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-2023.0.0-brightgreen?style=flat-square&logo=spring)](https://spring.io/projects/spring-cloud)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql)](https://www.mysql.com/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-black?style=flat-square&logo=githubactions)](https://github.com/features/actions)
@@ -17,7 +17,9 @@
 
 ## 📖 About
 
-Movies API is a backend application built on a **microservices architecture** that allows managing movies, genres, reviews and ratings. It includes a full authentication system with **JWT** and role-based access control (USER / ADMIN).
+CineAPI is a backend application built on a **microservices architecture** that allows managing movies, genres, reviews and ratings. It includes a full authentication system with **JWT** and role-based access control (USER / ADMIN).
+
+Inter-service communication is handled via **Feign Client** with **Circuit Breaker + Retry (Resilience4j)** for fault tolerance and automatic fallback. JWT tokens are automatically propagated between services through a Feign `RequestInterceptor`, and each service validates them independently.
 
 The project follows **Domain-Driven Design** principles, separation of concerns and Spring Cloud best practices.
 
@@ -65,15 +67,17 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
 
 | Layer | Technology |
 |---|---|
-| Language | Java 21 |
-| Framework | Spring Boot 4.0.6 |
-| Microservices | Spring Cloud 2025.1.1 |
+| Language | Java 17 |
+| Framework | Spring Boot 3.5.3 |
+| Microservices | Spring Cloud 2023.0.0 |
 | Security | Spring Security + JWT (jjwt 0.11.5) |
 | Persistence | Spring Data JPA + Hibernate 6 |
 | Database | MySQL 8.0 (one per service) |
 | Service Registry | Netflix Eureka |
 | Config Server | Spring Cloud Config (native profile) |
 | API Gateway | Spring Cloud Gateway MVC |
+| Inter-service Comm. | Feign Client + RequestInterceptor (JWT propagation) |
+| Fault Tolerance | Resilience4j (Circuit Breaker + Retry) |
 | Load Balancer | Spring Cloud LoadBalancer |
 | Containers | Docker + Docker Compose |
 | CI/CD | GitHub Actions |
@@ -93,8 +97,8 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
 
 ```bash
 # Clone the repository
-git clone https://github.com/estebanmm13/PROYECTO_MOVIES.git
-cd PROYECTO_MOVIES
+git clone https://github.com/EstebanMM13/CineAPI.git
+cd CineAPI
 
 # Start all services
 docker compose up -d
@@ -209,6 +213,10 @@ Swagger UI available on each service:
 | Auth Service | `http://localhost:8081/swagger-ui.html` |
 | Movies Service | `http://localhost:8082/swagger-ui.html` |
 
+## 🌐 Interactive Documentation (DeepWiki)
+
+Explore the automatically generated documentation for this project at [DeepWiki](https://deepwiki.com/EstebanMM13/CineAPI).
+
 ---
 
 ## 🐳 Docker
@@ -260,7 +268,7 @@ Images available at [Docker Hub](https://hub.docker.com/u/estebanmm13).
 ## 📁 Project Structure
 
 ```
-PROYECTO_MOVIES/
+CineAPI/
 ├── api-gateway/                  # Spring Cloud Gateway MVC
 ├── auth-service/                 # Authentication & user management
 │   └── src/main/java/
@@ -288,10 +296,10 @@ PROYECTO_MOVIES/
 
 ## 🗺️ Roadmap
 
-- [ ] Feign Client for inter-service communication
-- [ ] Circuit Breaker with Resilience4j
+- [x] Feign Client for inter-service communication
+- [x] Circuit Breaker with Resilience4j
+- [x] Unit and integration tests
 - [ ] Distributed Tracing with Zipkin
-- [ ] Unit and integration tests
 - [ ] React frontend
 - [ ] TMDB API integration
 

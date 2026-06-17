@@ -1,6 +1,6 @@
 package com.estebanmm13.movies_service.services.review;
 
-import com.estebanmm13.movies_service.clients.AuthServiceClient;
+import com.estebanmm13.movies_service.clients.UsernameResolver;
 import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
@@ -38,7 +38,7 @@ class ReviewServiceImplTest {
     @Mock private ReviewRepository reviewRepository;
     @Mock private MovieRepository movieRepository;
     @Mock private ReviewMapper reviewMapper;
-    @Mock private AuthServiceClient authServiceClient;
+    @Mock private UsernameResolver usernameResolver;
 
     @InjectMocks private ReviewServiceImpl reviewService;
 

@@ -26,3 +26,18 @@ logging:
     org.hibernate: ERROR
     org.springframework: ERROR
     org.springframework.web: INFO
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      auth-service-cb:
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        register-health-indicator: true
+  retry:
+    instances:
+      auth-service-retry:
+        max-attempts: 2
+        wait-duration: 200ms

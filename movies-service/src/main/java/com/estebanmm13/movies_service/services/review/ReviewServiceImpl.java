@@ -1,7 +1,7 @@
 package com.estebanmm13.movies_service.services.review;
 
 
-import com.estebanmm13.movies_service.clients.AuthServiceClient;
+import com.estebanmm13.movies_service.clients.UsernameResolver;
 import com.estebanmm13.movies_service.dtoModels.request.ReviewRequestDTO;
 import com.estebanmm13.movies_service.dtoModels.response.ReviewResponseDTO;
 import com.estebanmm13.movies_service.error.notFound.MovieNotFoundException;
@@ -11,7 +11,6 @@ import com.estebanmm13.movies_service.models.Movie;
 import com.estebanmm13.movies_service.models.Review;
 import com.estebanmm13.movies_service.repositories.MovieRepository;
 import com.estebanmm13.movies_service.repositories.ReviewRepository;
-import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,36 +26,25 @@ import static com.estebanmm13.movies_service.error.notFound.ReviewNotFoundExcept
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
-    private static final String UNKNOWN_USERNAME = "Usuario desconocido";
-
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final ReviewMapper reviewMapper;
-    private final AuthServiceClient authServiceClient;
+    private final UsernameResolver usernameResolver;
 
     public ReviewServiceImpl(ReviewRepository reviewRepository,
                              MovieRepository movieRepository,
                              ReviewMapper reviewMapper,
-                             AuthServiceClient authServiceClient) {
+                             UsernameResolver usernameResolver) {
         this.reviewRepository = reviewRepository;
         this.movieRepository = movieRepository;
         this.reviewMapper = reviewMapper;
-        this.authServiceClient = authServiceClient;
+        this.usernameResolver = usernameResolver;
     }
 
     private ReviewResponseDTO toResponseDTOWithUsername(Review review) {
         ReviewResponseDTO dto = reviewMapper.toResponseDTO(review);
-        dto.setUsername(resolveUsername(review.getUserId()));
+        dto.setUsername(usernameResolver.resolveUsername(review.getUserId()));
         return dto;
-    }
-
-    private String resolveUsername(Long userId) {
-        try {
-            return authServiceClient.getUsernameById(userId);
-        } catch (FeignException ex) {
-            log.warn("No se pudo resolver el username del usuario {} en auth-service: {}", userId, ex.getMessage());
-            return UNKNOWN_USERNAME;
-        }
     }
 
     @Override
@@ -75,8 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewResponseDTO createReview(Long userId, Long movieId, ReviewRequestDTO dto) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new UserNotFoundException(String.format(UserNotFoundException.NOT_FOUND_BY_ID, userId)));
+
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException(String.format(MovieNotFoundException.NOT_FOUND_BY_ID, movieId)));
 
