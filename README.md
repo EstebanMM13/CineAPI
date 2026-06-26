@@ -8,6 +8,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.3-brightgreen?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-2023.0.0-brightgreen?style=flat-square&logo=spring)](https://spring.io/projects/spring-cloud)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql)](https://www.mysql.com/)
+[![Redis](https://img.shields.io/badge/Redis-7-red?style=flat-square&logo=redis)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-black?style=flat-square&logo=githubactions)](https://github.com/features/actions)
 
@@ -20,6 +21,8 @@
 CineAPI is a backend application built on a **microservices architecture** that allows managing movies, genres, reviews and ratings. It includes a full authentication system with **JWT** and role-based access control (USER / ADMIN).
 
 Inter-service communication is handled via **Feign Client** with **Circuit Breaker + Retry (Resilience4j)** for fault tolerance and automatic fallback. JWT tokens are automatically propagated between services through a Feign `RequestInterceptor`, and each service validates them independently.
+
+The project includes a full **observability stack**: Prometheus scrapes metrics from each service (exposed via Spring Boot Actuator) and Grafana displays real-time dashboards for cache hit rate, endpoint latency, circuit breaker state and JVM health.
 
 The project follows **Domain-Driven Design** principles, separation of concerns and Spring Cloud best practices.
 
@@ -38,16 +41,21 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
            ┌────────▼────────┐     ┌──────────▼────────┐
            │  Auth Service   │     │  Movies Service   │
            │    :8081        │     │    :8082          │
-           └────────┬────────┘     └──────────┬────────┘
-                    │                         │
-           ┌────────▼────────┐     ┌──────────▼────────┐
-           │    auth_db      │     │    movies_db      │
-           │  MySQL :3307    │     │  MySQL :3308      │
-           └─────────────────┘     └───────────────────┘
+           └────────┬────────┘     └──────┬─────┬──────┘
+                    │                     │     │
+           ┌────────▼────────┐   ┌────────▼─┐ ┌▼──────────────┐
+           │    auth_db      │   │ movies_db│ │  Redis :6379  │
+           │  MySQL :3307    │   │ MySQL    │ │  (cache)      │
+           └─────────────────┘   └──────────┘ └───────────────┘
 
            ┌─────────────────┐     ┌───────────────────┐
            │Service Registry │     │  Config Server    │
            │  Eureka :8761   │     │    :8088          │
+           └─────────────────┘     └───────────────────┘
+
+           ┌─────────────────┐     ┌───────────────────┐
+           │   Prometheus    │     │     Grafana        │
+           │    :9090        │────▶│     :3000          │
            └─────────────────┘     └───────────────────┘
 ```
 
@@ -60,6 +68,9 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
 | `movies-service` | 8082 | Movies, genres, reviews and ratings |
 | `config-server` | 8088 | Centralized configuration (Spring Cloud Config) |
 | `service-registry` | 8761 | Service discovery (Eureka) |
+| `redis` | 6379 | Cache layer for movies and genres |
+| `prometheus` | 9090 | Metrics collection |
+| `grafana` | 3000 | Observability dashboards |
 
 ---
 
@@ -73,12 +84,14 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
 | Security | Spring Security + JWT (jjwt 0.11.5) |
 | Persistence | Spring Data JPA + Hibernate 6 |
 | Database | MySQL 8.0 (one per service) |
+| Cache | Redis 7 (RedisCacheManager + `@Cacheable`) |
 | Service Registry | Netflix Eureka |
 | Config Server | Spring Cloud Config (native profile) |
 | API Gateway | Spring Cloud Gateway MVC |
 | Inter-service Comm. | Feign Client + RequestInterceptor (JWT propagation) |
 | Fault Tolerance | Resilience4j (Circuit Breaker + Retry) |
 | Load Balancer | Spring Cloud LoadBalancer |
+| Observability | Prometheus + Grafana + Spring Boot Actuator |
 | Containers | Docker + Docker Compose |
 | CI/CD | GitHub Actions |
 | Documentation | Swagger / OpenAPI 3 |
@@ -108,11 +121,12 @@ docker ps
 ```
 
 Services start automatically in the correct order:
-1. MySQL (auth + movies)
+1. MySQL (auth + movies) + Redis
 2. Service Registry (Eureka)
 3. Config Server
 4. Auth Service + Movies Service
 5. API Gateway
+6. Prometheus + Grafana
 
 ### Run locally (development)
 
@@ -125,7 +139,7 @@ cd movies-service    && mvn spring-boot:run
 cd api-gateway       && mvn spring-boot:run
 ```
 
-Requires MySQL running locally with `auth_db` and `movies_db` databases created.
+Requires MySQL and Redis running locally with `auth_db` and `movies_db` databases created.
 
 ---
 
@@ -204,6 +218,41 @@ Authorization: Bearer eyJhbGci...
 
 ---
 
+## ⚡ Caching
+
+`movies-service` uses **Redis** as a cache layer via Spring's `@Cacheable` / `@CacheEvict` annotations:
+
+| Cache | TTL | What is cached |
+|---|---|---|
+| `movie` | 15 min | Individual movie by ID |
+| `genre` | 1 hour | Individual genre by ID |
+| `genres` | 1 hour | Paginated genre listings |
+
+Cache statistics (hits, misses) are exposed to Prometheus via Micrometer and visible in Grafana.
+
+---
+
+## 📊 Observability
+
+The full observability stack runs as Docker containers alongside the services.
+
+| Tool | URL | Purpose |
+|---|---|---|
+| Prometheus | `http://localhost:9090` | Metrics collection |
+| Grafana | `http://localhost:3000` | Dashboards (admin/admin) |
+
+### Grafana Dashboard panels
+
+| Panel | Query | What it shows |
+|---|---|---|
+| Cache Hit Rate | `cache_gets_total` | % of requests served from Redis |
+| Endpoint latency | `http_server_requests_seconds_*` | Average response time per endpoint |
+| Error rate | `http_server_requests_seconds_count` | % of non-200 responses |
+| Circuit Breaker state | `resilience4j_circuitbreaker_state` | CLOSED / OPEN / HALF_OPEN |
+| JVM Heap memory | `jvm_memory_used_bytes` | Eden, Old Gen, Survivor Space |
+
+---
+
 ## 📚 API Documentation
 
 Swagger UI available on each service:
@@ -232,6 +281,8 @@ Explore the automatically generated documentation for this project at [DeepWiki]
 | `DB_PASS` | MySQL password | `1234` |
 | `EUREKA_URL` | Service registry URL | `localhost:8761/eureka/` |
 | `CONFIG_SERVER_URL` | Config server URL | `localhost:8088` |
+| `REDIS_HOST` | Redis hostname | `localhost` |
+| `REDIS_PORT` | Redis port | `6379` |
 
 ### Useful Commands
 
@@ -240,7 +291,7 @@ Explore the automatically generated documentation for this project at [DeepWiki]
 docker compose up -d
 
 # Follow logs of a service
-docker logs movies-auth-service -f
+docker logs movies-movies-service -f
 
 # Restart without losing data
 docker compose down
@@ -279,7 +330,7 @@ CineAPI/
 │       └── repositories/        # UserRepository
 ├── movies-service/               # Movies, genres, reviews
 │   └── src/main/java/
-│       ├── config/               # Security, JWT, filters
+│       ├── config/               # Security, JWT, CacheConfig, filters
 │       ├── controllers/          # MovieController, GenreController, ReviewController
 │       ├── services/             # MovieService, GenreService, ReviewService
 │       ├── models/               # Movie, Genre, Review, Vote
@@ -288,6 +339,9 @@ CineAPI/
 │   └── src/main/resources/
 │       └── config/               # Per-service YML files
 ├── service-registry/             # Eureka Server
+├── monitoring/                   # Observability config
+│   ├── prometheus.yml            # Scrape targets
+│   └── grafana/                  # Grafana provisioning
 ├── docker-compose.yml            # Container orchestration
 └── .github/workflows/            # GitHub Actions CI/CD
 ```
@@ -299,8 +353,10 @@ CineAPI/
 - [x] Feign Client for inter-service communication
 - [x] Circuit Breaker with Resilience4j
 - [x] Unit and integration tests
+- [x] Redis caching with TTL and cache eviction
+- [x] Prometheus + Grafana observability stack
 - [ ] Distributed Tracing with Zipkin
-- [ ] React frontend
+- [ ] Angular frontend
 - [ ] TMDB API integration
 
 ---
