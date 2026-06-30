@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/movies")
-@CrossOrigin
 @Tag(name = "Movies", description = "Movie management endpoints")
 public class MovieController {
 

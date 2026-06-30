@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/genres")
-@CrossOrigin
 @Tag(name = "Genres", description = "Genre management endpoints")
 public class GenreController {
 

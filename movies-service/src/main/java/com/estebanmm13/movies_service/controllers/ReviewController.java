@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/movies/{movieId}/reviews")
-@CrossOrigin
 @Tag(name = "Reviews", description = "Movie review management endpoints")
 public class ReviewController {
 

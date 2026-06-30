@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/reviews/{userId}")
-@CrossOrigin
 @Tag(name = "User Reviews", description = "User review retrieval endpoints")
 public class ReviewUsersController {
 
