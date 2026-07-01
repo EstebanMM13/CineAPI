@@ -60,9 +60,13 @@ class GenreControllerTest {
     }
 
     @Test
-    void findAllGenres_unauthenticated_returns401() throws Exception {
+    void findAllGenres_unauthenticated_returns200() throws Exception {
+        Page<GenreResponseDTO> page = new PageImpl<>(List.of(dto(1L, "Action"), dto(2L, "Drama")));
+        given(genreService.findAllGenres(any())).willReturn(page);
+
         mockMvc.perform(get(BASE_URL))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     // ── GET /api/genres/{id} ──────────────────────────────────────────────────

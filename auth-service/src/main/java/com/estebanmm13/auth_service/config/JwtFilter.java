@@ -40,12 +40,19 @@ public class JwtFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         jwt = authHeader.substring(7);
-        username = jwtService.getUserName(jwt);
+
+        try {
+            username = jwtService.getUserName(jwt);
+        } catch (Exception e) {
+            log.warn("Token malformado para request: {}", request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token malformado");
+            return;
+        }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             log.debug("Token valido para usuario: {}", username);

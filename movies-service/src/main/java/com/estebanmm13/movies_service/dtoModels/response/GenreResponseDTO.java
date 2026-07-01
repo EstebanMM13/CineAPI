@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Genre information")
-public class GenreResponseDTO {
+public class GenreResponseDTO implements Serializable {
     @Schema(description = "Genre ID", example = "1")
     private Long id;
 

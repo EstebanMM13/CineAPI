@@ -41,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (!jwtService.isTokenValid(jwt)) {
             log.warn("Token inválido o expirado para request: {}", request.getRequestURI());
-            filterChain.doFilter(request, response);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado");
             return;
         }
 

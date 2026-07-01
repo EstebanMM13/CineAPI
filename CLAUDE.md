@@ -72,7 +72,7 @@ Internal controller paths (no version, unchanged):
 ## Security
 
 Both `auth-service` and `movies-service` have their own `SecurityConfig` (stateless JWT, `JwtFilter` added before `UsernamePasswordAuthenticationFilter`).
-- `movies-service`: `anyRequest().authenticated()` except `/v3/api-docs/**`, `/swagger-ui/**` — everything requires a valid JWT.
+- `movies-service`: `GET /api/movies/**`, `/api/genres/**`, `/api/reviews/**` are `permitAll()` (public read access, no JWT needed); everything else — writes, and swagger/actuator health endpoints aside — requires a valid JWT via `anyRequest().authenticated()`.
 - `auth-service`: `/api/auth/**` and swagger are `permitAll()`; everything else (including `/api/users`, `/api/admin`) requires a JWT. `AdminController` additionally requires `ROLE_ADMIN` via `@PreAuthorize`.
 
 JWT secret is shared across services (`jwt.secret` in each service's config-server YAML) so tokens issued by auth-service validate in movies-service.

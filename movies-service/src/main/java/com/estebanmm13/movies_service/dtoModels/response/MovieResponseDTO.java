@@ -3,11 +3,12 @@ package com.estebanmm13.movies_service.dtoModels.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Schema(description = "Movie information returned to the client")
-public class MovieResponseDTO {
+public class MovieResponseDTO implements Serializable {
     @Schema(description = "Unique identifier", example = "1")
     private Long id;
 

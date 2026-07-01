@@ -82,9 +82,13 @@ class MovieControllerTest {
     }
 
     @Test
-    void findAllMovies_unauthenticated_returns401() throws Exception {
+    void findAllMovies_unauthenticated_returns200() throws Exception {
+        Page<MovieResponseDTO> page = new PageImpl<>(List.of(movieDto(1L), movieDto(2L)));
+        given(movieService.findAllMovies(any())).willReturn(page);
+
         mockMvc.perform(get(BASE_URL))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     // ── GET /api/movies/{id} ──────────────────────────────────────────────────

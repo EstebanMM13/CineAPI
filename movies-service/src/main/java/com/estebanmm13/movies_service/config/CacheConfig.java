@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -17,9 +17,10 @@ import java.util.Map;
 @Configuration
 public class CacheConfig {
 
-    public static final String CACHE_GENRES = "genres";
-    public static final String CACHE_GENRE  = "genre";
-    public static final String CACHE_MOVIE  = "movie";
+    public static final String CACHE_GENRES    = "genres";
+    public static final String CACHE_GENRE     = "genre";
+    public static final String CACHE_MOVIE     = "movie";
+    public static final String CACHE_USERNAMES = "usernames";
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -27,13 +28,14 @@ public class CacheConfig {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(GenericJackson2JsonRedisSerializer.builder().build()))
+                        .fromSerializer(new JdkSerializationRedisSerializer()))
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
-                CACHE_GENRES, defaults.entryTtl(Duration.ofHours(1)),
-                CACHE_GENRE,  defaults.entryTtl(Duration.ofHours(1)),
-                CACHE_MOVIE,  defaults.entryTtl(Duration.ofMinutes(15))
+                CACHE_GENRES,    defaults.entryTtl(Duration.ofHours(1)),
+                CACHE_GENRE,     defaults.entryTtl(Duration.ofHours(1)),
+                CACHE_MOVIE,     defaults.entryTtl(Duration.ofMinutes(15)),
+                CACHE_USERNAMES, defaults.entryTtl(Duration.ofMinutes(30))
         );
 
         return RedisCacheManager.builder(connectionFactory)

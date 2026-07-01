@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -15,6 +16,7 @@ public class UsernameResolver {
 
     private final AuthServiceClient authServiceClient;
 
+    @Cacheable(value = "usernames", key = "#userId")
     @CircuitBreaker(name = "auth-service-cb", fallbackMethod = "usernameFallback")
     @Retry(name = "auth-service-retry", fallbackMethod = "usernameFallback")
     public String resolveUsername(Long userId) {

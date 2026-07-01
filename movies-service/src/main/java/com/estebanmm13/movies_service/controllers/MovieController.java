@@ -125,6 +125,7 @@ public class MovieController {
                     content = @Content(schema = @Schema(implementation = ResponseError.class)))
     })
     @PutMapping("/{movieId}/vote/{rating}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MovieResponseDTO> voteMovie(
             @Parameter(description = "Movie ID", required = true) @PathVariable Long movieId,
             @Parameter(description = "Rating value between 1.0 and 10.0", required = true) @PathVariable Double rating,

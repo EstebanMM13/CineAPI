@@ -71,9 +71,13 @@ class ReviewUsersControllerTest {
     }
 
     @Test
-    void findReviewsByUser_unauthenticated_returns401() throws Exception {
+    void findReviewsByUser_unauthenticated_returns200() throws Exception {
+        Page<ReviewResponseDTO> page = new PageImpl<>(List.of(reviewDto(1L), reviewDto(2L)));
+        given(reviewService.findReviewsByUserId(eq(10L), any())).willReturn(page);
+
         mockMvc.perform(get(BASE_URL + "/10"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test

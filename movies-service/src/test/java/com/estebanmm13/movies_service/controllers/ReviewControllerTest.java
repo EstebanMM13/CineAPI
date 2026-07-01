@@ -86,9 +86,13 @@ class ReviewControllerTest {
     }
 
     @Test
-    void findReviewsByMovie_unauthenticated_returns401() throws Exception {
+    void findReviewsByMovie_unauthenticated_returns200() throws Exception {
+        Page<ReviewResponseDTO> page = new PageImpl<>(List.of(reviewDto(1L)));
+        given(reviewService.findReviewsByMovieId(eq(1L), any())).willReturn(page);
+
         mockMvc.perform(get("/api/movies/1/reviews"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     // ── GET /api/movies/{movieId}/reviews/{id} ────────────────────────────────

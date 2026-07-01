@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +83,7 @@ public class ReviewController {
                     content = @Content(schema = @Schema(implementation = ResponseError.class)))
     })
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponseDTO> createReview(
             @PathVariable Long movieId,
             @Valid @RequestBody ReviewRequestDTO dto,
@@ -102,6 +104,7 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Invalid review data")
     })
     @PatchMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponseDTO> updateReview(
             @PathVariable Long movieId,
             @PathVariable Long id,
@@ -122,6 +125,7 @@ public class ReviewController {
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long movieId,
             @PathVariable Long id,
