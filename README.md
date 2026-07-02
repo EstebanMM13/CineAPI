@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 CineAPI
+# 🎬 Cineo API
 
 ### REST API built with Spring Cloud Microservices for movie management
 
@@ -18,7 +18,7 @@
 
 ## 📖 About
 
-CineAPI is a backend application built on a **microservices architecture** that allows managing movies, genres, reviews and ratings. It includes a full authentication system with **JWT** and role-based access control (USER / ADMIN).
+Cineo API is a backend application built on a **microservices architecture** that allows managing movies, genres, reviews and ratings. It includes a full authentication system with **JWT** and role-based access control (USER / ADMIN).
 
 Inter-service communication is handled via **Feign Client** with **Circuit Breaker + Retry (Resilience4j)** for fault tolerance and automatic fallback. JWT tokens are automatically propagated between services through a Feign `RequestInterceptor`, and each service validates them independently.
 
@@ -110,8 +110,8 @@ The project follows **Domain-Driven Design** principles, separation of concerns 
 
 ```bash
 # Clone the repository
-git clone https://github.com/EstebanMM13/CineAPI.git
-cd CineAPI
+git clone https://github.com/EstebanMM13/cineo-api.git
+cd cineo-api
 
 # Start all services
 docker compose up -d
@@ -264,7 +264,7 @@ Swagger UI available on each service:
 
 ## 🌐 Interactive Documentation (DeepWiki)
 
-Explore the automatically generated documentation for this project at [DeepWiki](https://deepwiki.com/EstebanMM13/CineAPI).
+Explore the automatically generated documentation for this project at [DeepWiki](https://deepwiki.com/EstebanMM13/cineo-api).
 
 ---
 
@@ -319,7 +319,7 @@ Images available at [Docker Hub](https://hub.docker.com/u/estebanmm13).
 ## 📁 Project Structure
 
 ```
-CineAPI/
+cineo-api/
 ├── api-gateway/                  # Spring Cloud Gateway MVC
 ├── auth-service/                 # Authentication & user management
 │   └── src/main/java/
